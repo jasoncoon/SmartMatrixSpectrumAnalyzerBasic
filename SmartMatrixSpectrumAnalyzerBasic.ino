@@ -95,7 +95,11 @@ void loop()
             //Serial.print(shown[i]);
             //Serial.print(" ");
 
-            rgb24 color = CRGB(CHSV(val * 8, 255, 255));
+            // color based on level
+            // rgb24 color = CRGB(CHSV(val * 8, 255, 255));
+
+            // color based on band
+            rgb24 color = CRGB(CHSV(i * 15, 255, 255));
 
             // draw the levels on the matrix
             if (shown[i] >= 0) {
@@ -115,5 +119,7 @@ void loop()
 
         //Serial.print(F(" free ram:"));
         //Serial.println(FreeRam());
+
+        FastLED.countFPS();
     }
 }

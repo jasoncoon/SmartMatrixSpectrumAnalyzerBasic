@@ -8,13 +8,13 @@
 
 SmartMatrix matrix;
 
-AudioInputAnalog         input;
+AudioInputAnalog         input(A2);
 AudioAnalyzeFFT256       fft;
 AudioConnection          audioConnection(input, 0, fft, 0);
 
 // The scale sets how much sound is needed in each frequency range to
 // show all 32 bars.  Higher numbers are more sensitive.
-float scale = 160.0;
+float scale = 256.0;
 
 // An array to hold the 16 frequency bands
 float level[16];
@@ -22,19 +22,15 @@ float level[16];
 // This array holds the on-screen levels.  When the signal drops quickly,
 // these are used to lower the on-screen level 1 bar per update, which
 // looks more pleasing to corresponds to human sound perception.
-int   shown[16];
+int shown[16];
 
-rgb24 black = CRGB(0, 0, 0);
-rgb24 red = CRGB(255, 0, 0);
+const rgb24 black = CRGB(0, 0, 0);
 
 byte status = 0;
 
 void setup()
 {
     Serial.begin(9600);
-    //delay(1000);
-
-    //Serial.println(F("Starting..."));
 
     // Initialize 32x32 LED Matrix
     matrix.begin();
@@ -42,8 +38,6 @@ void setup()
 
     // Audio requires memory to work.
     AudioMemory(12);
-
-    //Serial.println(F("Started"));
 }
 
 void loop()
@@ -55,6 +49,8 @@ void loop()
         // many FFT bins together.
 
         // I'm skipping the first two bins, as they seem to be unusable
+        // they start out at zero, but then climb and don't come back down
+        // even after sound input stops
         level[0] = fft.read(2);
         level[1] = fft.read(3);
         level[2] = fft.read(4);
@@ -75,8 +71,6 @@ void loop()
         matrix.fillScreen(black);
 
         for (int i = 0; i < 16; i++) {
-            // Serial.print(level[i]);
-
             // TODO: conversion from FFT data to display bars should be
             // exponentially scaled.  But how keep it a simple example?
             int val = level[i] * scale;
@@ -92,13 +86,7 @@ void loop()
                 val = shown[i];
             }
 
-            //Serial.print(shown[i]);
-            //Serial.print(" ");
-
-            // color based on level
-            // rgb24 color = CRGB(CHSV(val * 8, 255, 255));
-
-            // color based on band
+            // color hue based on band
             rgb24 color = CRGB(CHSV(i * 15, 255, 255));
 
             // draw the levels on the matrix
@@ -111,14 +99,6 @@ void loop()
         }
 
         matrix.swapBuffers();
-
-        //Serial.println();
-
-        //Serial.print(F(" cpu:"));
-        //Serial.println(AudioProcessorUsageMax());
-
-        //Serial.print(F(" free ram:"));
-        //Serial.println(FreeRam());
 
         FastLED.countFPS();
     }
